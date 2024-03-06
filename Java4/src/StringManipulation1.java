@@ -20,7 +20,7 @@ public class StringManipulation1 {
     public static void main(String[] args) {
         try {
             //Устанавливаем соединение с базой данных MySQL
-            con = getConnection("jdbc:mysql://localhost/test", "root", "Ipad3007");
+            con = getConnection("jdbc:mysql://localhost/test", "root", "ilya");
             //Выполняем операции со строками
             performStringOperations();
         } catch (SQLException e) {
@@ -269,6 +269,6 @@ public class StringManipulation1 {
 
     //Метод для установления соединения с базой данных MySQL
     private static Connection getConnection(String url, String username, String password) throws SQLException {
-        return DriverManager.getConnection(url, "root", "Ipad3007");
+        return DriverManager.getConnection(url, "root", "ilya");
     }
 }
