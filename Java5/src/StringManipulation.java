@@ -41,10 +41,11 @@ public class StringManipulation {
             System.out.println("Выберите действие:");
             System.out.println("1. Вывести все таблицы из MySQL.");
             System.out.println("2. Создать таблицу в MySQL.");
-            System.out.println("3. Изменить порядок символов строки на обратный, результат сохранить в MySQL с последующим выводом в консоль.");
-            System.out.println("4. Добавить одну строку в другую, результат сохранить в MySQL с последующим выводом в консоль.");
-            System.out.println("5. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран.");
-            System.out.println("6. Выйти.");
+            System.out.println("3. Ввести две строки с клавиатуры, результат сохранить в MySQL с последующим выводом в консоль.");
+            System.out.println("4. Изменить порядок символов строки на обратный, результат сохранить в MySQL с последующим выводом в консоль.");
+            System.out.println("5. Добавить одну строку в другую, результат сохранить в MySQL с последующим выводом в консоль.");
+            System.out.println("6. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран.");
+            System.out.println("0. Выйти.");
 
             // Считываем выбор пользователя
             int choice = scanner.nextInt();
@@ -66,6 +67,19 @@ public class StringManipulation {
                     createTable(con);
                     break;
                 case 3:
+                    //Вводим две строки с клавиатуры и сохраняем их в переменные
+                    System.out.println("Введите первую строку:");
+                    firstString = scanner.nextLine();
+                    System.out.println("Введите вторую строку:");
+                    secondString = scanner.nextLine();
+                    stringsEntered = true;
+                    //Сохраняем введенные строки в базу данных MySQL
+                    System.out.println("Введите название таблицы, куда сохранить результат: ");
+                    saveResultToDatabase("Первая строка", firstString, scanner.next());
+                    System.out.println("Введите название таблицы, куда сохранить результат: ");
+                    saveResultToDatabase("Вторая строка", secondString, scanner.next());
+                    break;
+                case 4:
                     // Изменяем порядок символов строки на обратный
                     if (!stringsEntered) {
                         System.out.println("Сначала введите две строки.");
@@ -74,7 +88,7 @@ public class StringManipulation {
                     reverseStringAndSave(firstString, "Первая строка");
                     reverseStringAndSave(secondString, "Вторая строка");
                     break;
-                case 4:
+                case 5:
                     // Добавляем одну строку в другую
                     if (!stringsEntered) {
                         System.out.println("Сначала введите две строки.");
@@ -82,11 +96,11 @@ public class StringManipulation {
                     }
                     addStringsAndSave(firstString, secondString, "Сложенная строка");
                     break;
-                case 5:
+                case 6:
                     // Сохраняем все данные из MySQL в Excel и выводим на экран
                     exportToExcel(con);
                     break;
-                case 6:
+                case 0:
                     // Выходим из программы
                     System.out.println("Выход из программы.");
                     return;
