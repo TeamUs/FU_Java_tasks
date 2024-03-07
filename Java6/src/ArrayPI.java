@@ -10,8 +10,8 @@ import java.util.Scanner;
 
 public class ArrayPI {
 
-    private static Scanner scanner = new Scanner(System.in);
-    private static Connection con;
+    public static Scanner scanner = new Scanner(System.in);
+    public static Connection con;
 
     public static void main(String[] args) {
         try {
@@ -22,7 +22,7 @@ public class ArrayPI {
         }
     }
 
-    private static void performMatrixOperations() {
+    public static void performMatrixOperations() {
         while (true) {
             System.out.println("Выберите действие:");
             System.out.println("1. Вывести все таблицы из MySQL.");
@@ -50,7 +50,7 @@ public class ArrayPI {
                     inputMatricesAndSaveToDatabase();
                     break;
                 case 4:
-                    Matrix();
+                    matrixMultiplicationAndSaveToDatabase();
                     break;
                 case 5:
                     exportResultsToExcel();
@@ -64,15 +64,36 @@ public class ArrayPI {
         }
     }
 
-    private static void inputMatricesAndSaveToDatabase() {
-        int[][] matrix1 = new int[7][7];
-        int[][] matrix2 = new int[7][7];
+    public static void inputMatricesAndSaveToDatabase() {
+        System.out.print("Введите количество строк первой матрицы: ");
+        int rows1 = scanner.nextInt();
 
-        System.out.println("Введите элементы первой матрицы (7x7):");
-        inputMatrix(matrix1);
+        System.out.print("Введите количество столбцов первой матрицы: ");
+        int cols1 = scanner.nextInt();
 
-        System.out.println("Введите элементы второй матрицы (7x7):");
-        inputMatrix(matrix2);
+        int[][] matrix1 = new int[rows1][cols1];
+
+        for (int i = 0; i < rows1; i++) {
+            for (int j = 0; j < cols1; j++) {
+                System.out.print("Введите элемент первой матрицы [" + i + "][" + j + "]: ");
+                matrix1[i][j] = scanner.nextInt();
+            }
+        }
+
+        System.out.print("Введите количество строк второй матрицы: ");
+        int rows2 = scanner.nextInt();
+
+        System.out.print("Введите количество столбцов второй матрицы: ");
+        int cols2 = scanner.nextInt();
+
+        int[][] matrix2 = new int[rows2][cols2];
+
+        for (int i = 0; i < rows2; i++) {
+            for (int j = 0; j < cols2; j++) {
+                System.out.print("Введите элемент второй матрицы [" + i + "][" + j + "]: ");
+                matrix2[i][j] = scanner.nextInt();
+            }
+        }
 
         try {
             saveMatrixToDatabase(matrix1, "Matrix1");
@@ -83,23 +104,33 @@ public class ArrayPI {
         }
     }
 
-    private static void inputMatrix(int[][] matrix) {
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                matrix[i][j] = scanner.nextInt();
-            }
-        }
-    }
+    public static void matrixMultiplicationAndSaveToDatabase() {
+        System.out.print("Введите количество строк первой матрицы: ");
+        int rows1 = scanner.nextInt();
 
-    public static final void Matrix() {
-        int[][] matrix1 = new int[7][7];
-        int[][] matrix2 = new int[7][7];
+        System.out.print("Введите количество столбцов первой матрицы: ");
+        int cols1 = scanner.nextInt();
 
-        System.out.println("Введите элементы первой матрицы (7x7):");
+        int[][] matrix1 = new int[rows1][cols1];
+
+        System.out.println("Введите элементы первой матрицы:");
         inputMatrix(matrix1);
 
-        System.out.println("Введите элементы второй матрицы (7x7):");
+        System.out.print("Введите количество строк второй матрицы: ");
+        int rows2 = scanner.nextInt();
+
+        System.out.print("Введите количество столбцов второй матрицы: ");
+        int cols2 = scanner.nextInt();
+
+        int[][] matrix2 = new int[rows2][cols2];
+
+        System.out.println("Введите элементы второй матрицы:");
         inputMatrix(matrix2);
+
+        if (cols1 != rows2) {
+            System.out.println("Невозможно перемножить матрицы: количество столбцов первой матрицы не совпадает с количеством строк второй матрицы.");
+            return;
+        }
 
         int[][] result = multiplyMatrices(matrix1, matrix2);
 
@@ -112,27 +143,60 @@ public class ArrayPI {
         }
     }
 
-    private static int[][] multiplyMatrices(int[][] matrix1, int[][] matrix2) {
-        int[][] result = new int[matrix1.length][matrix2[0].length];
-        for (int i = 0; i < matrix1.length; i++) {
-            for (int j = 0; j < matrix2[0].length; j++) {
-                for (int k = 0; k < matrix1[0].length; k++) {
+    public static void inputMatrix(int[][] matrix) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                matrix[i][j] = scanner.nextInt();
+            }
+        }
+    }
+
+    public static int[][] multiplyMatrices(int[][] matrix1, int[][] matrix2) {
+        int rows1 = matrix1.length;
+        int cols1 = matrix1[0].length;
+        int cols2 = matrix2[0].length;
+
+        int[][] result = new int[rows1][cols2];
+
+        for (int i = 0; i < rows1; i++) {
+            for (int j = 0; j < cols2; j++) {
+                for (int k = 0; k < cols1; k++) {
                     result[i][j] += matrix1[i][k] * matrix2[k][j];
                 }
             }
         }
+
         return result;
     }
 
-    private static void exportResultsToExcel() {
+    public static void exportResultsToExcel() {
         try {
             String excelFilePath = "results.xlsx";
             Workbook workbook = new XSSFWorkbook();
-            Sheet sheet = workbook.createSheet("MatrixResults");
 
-            System.out.println("Введите имя таблицы для экспорта в Excel:");
-            String tableName = scanner.next();
+            // Сохранение матрицы 1 на отдельном листе
+            saveMatrixToExcel(workbook, "Matrix1", "Matrix1");
 
+            // Сохранение матрицы 2 на отдельном листе
+            saveMatrixToExcel(workbook, "Matrix2", "Matrix2");
+
+            // Сохранение результата перемножения матриц на отдельном листе
+            saveMatrixToExcel(workbook, "MatrixResult", "MatrixResult");
+
+            try (FileOutputStream outputStream = new FileOutputStream(excelFilePath)) {
+                workbook.write(outputStream);
+            }
+
+            System.out.println("Результаты успешно экспортированы в Excel.");
+        } catch (IOException e) {
+            System.out.println("Ошибка при экспорте в Excel: " + e.getMessage());
+        }
+    }
+
+    public static void saveMatrixToExcel(Workbook workbook, String tableName, String sheetName) {
+        Sheet sheet = workbook.createSheet(sheetName);
+
+        try {
             displayTableContents(con, tableName);
 
             String sql = "SELECT * FROM " + tableName;
@@ -154,19 +218,13 @@ public class ArrayPI {
                         row.createCell(i - 1).setCellValue(resultSet.getString(i));
                     }
                 }
-
-                try (FileOutputStream outputStream = new FileOutputStream(excelFilePath)) {
-                    workbook.write(outputStream);
-                }
-
-                System.out.println("Результаты успешно экспортированы в Excel.");
             }
-        } catch (SQLException | IOException e) {
-            System.out.println("Ошибка при экспорте в Excel: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Ошибка при сохранении данных в Excel: " + e.getMessage());
         }
     }
 
-    private static void saveMatrixToDatabase(int[][] matrix, String tableName) throws SQLException {
+    public static void saveMatrixToDatabase(int[][] matrix, String tableName) throws SQLException {
         try (PreparedStatement statement = con.prepareStatement(
                 "CREATE TABLE IF NOT EXISTS " + tableName + " (RowNum INT, ColNum INT, Value INT)")) {
             statement.executeUpdate();
@@ -185,7 +243,7 @@ public class ArrayPI {
         }
     }
 
-    private static void printMatrix(int[][] matrix) {
+    public static void printMatrix(int[][] matrix) {
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
                 System.out.print(matrix[i][j] + " ");
@@ -194,7 +252,7 @@ public class ArrayPI {
         }
     }
 
-    private static void displayTables(Connection con) throws SQLException {
+    public static void displayTables(Connection con) throws SQLException {
         String sql = "SHOW TABLES";
 
         try (Statement statement = con.createStatement();
@@ -246,7 +304,7 @@ public class ArrayPI {
         }
     }
 
-    private static Connection getConnection(String url, String username, String password) throws SQLException {
+    public static Connection getConnection(String url, String username, String password) throws SQLException {
         return DriverManager.getConnection(url, username, password);
     }
 }
