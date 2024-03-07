@@ -85,8 +85,14 @@ public class StringManipulation {
                         System.out.println("Сначала введите две строки.");
                         break;
                     }
-                    reverseStringAndSave(firstString, "Первая строка");
-                    reverseStringAndSave(secondString, "Вторая строка");
+                    StringBuffer reversedFirstString = new StringBuffer(firstString).reverse();
+                    StringBuffer reversedSecondString = new StringBuffer(secondString).reverse();
+                    System.out.println("Обратный порядок символов первой строки: " + reversedFirstString);
+                    System.out.println("Обратный порядок символов второй строки: " + reversedSecondString);
+                    System.out.println("Введите название таблицы, куда сохранить результат: ");
+                    saveResultToDatabase("Обратный порядок символов первой строки", reversedFirstString.toString(), scanner.next());
+                    System.out.println("Введите название таблицы, куда сохранить результат: ");
+                    saveResultToDatabase("Обратный порядок символов второй строки", reversedSecondString.toString(), scanner.next());
                     break;
                 case 5:
                     // Добавляем одну строку в другую
@@ -94,8 +100,20 @@ public class StringManipulation {
                         System.out.println("Сначала введите две строки.");
                         break;
                     }
-                    addStringsAndSave(firstString, secondString, "Сложенная строка");
+                    System.out.println("Введите индекс, в который нужно вставить вторую строку:");
+                    int index = scanner.nextInt();
+                    if (index < 0 || index > firstString.length()) {
+                        System.out.println("Некорректный индекс. Введите значение от 0 до " + firstString.length());
+                        break;
+                    }
+                    StringBuilder result = new StringBuilder(firstString);
+                    result.insert(index, secondString);
+                    String finalResult = result.toString();
+                    System.out.println("Результат вставки строки: " + finalResult);
+                    System.out.println("Введите название таблицы, куда сохранить результат: ");
+                    saveResultToDatabase("Сложенная строка", finalResult, scanner.next());
                     break;
+
                 case 6:
                     // Сохраняем все данные из MySQL в Excel и выводим на экран
                     exportToExcel(con);
@@ -146,22 +164,6 @@ public class StringManipulation {
         } catch (SQLException e) {
             System.out.println("Ошибка при сохранении результата в базе данных: " + e.getMessage());
         }
-    }
-
-    // Метод для изменения порядка символов строки на обратный и сохранения результата в базе данных MySQL
-    private static void reverseStringAndSave(String inputString, String tableName) {
-        StringBuffer reversedString = new StringBuffer(inputString).reverse();
-        saveResultToDatabase("Обратный порядок символов " + tableName, reversedString.toString(), tableName);
-        System.out.println("Результат сохранен в базе данных и выведен в консоль.");
-        System.out.println("Обратный порядок символов для " + tableName + ": " + reversedString);
-    }
-
-    // Метод для добавления одной строки в другую и сохранения результата в базе данных MySQL
-    private static void addStringsAndSave(String firstString, String secondString, String tableName) {
-        String concatenatedString = firstString + secondString;
-        saveResultToDatabase("Сложенная строка", concatenatedString, tableName);
-        System.out.println("Результат сохранен в базе данных и выведен в консоль.");
-        System.out.println("Результат сложения строк: " + concatenatedString);
     }
 
     // Метод для экспорта всех данных из MySQL в Excel
