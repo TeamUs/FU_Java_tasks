@@ -163,10 +163,20 @@ public class StringManipulation {
             System.out.println("Результат сохранен в базе данных.");
         } catch (SQLException e) {
             System.out.println("Ошибка при сохранении результата в базе данных: " + e.getMessage());
+            //Если таблица не существует, перенаправляем пользователя на создание таблицы
+            if (e.getMessage().contains("doesn't exist")) {
+                System.out.println("Таблица '" + tableName + "' не существует. Создайте новую таблицу.");
+                createTable(con); //Вызываем метод создания таблицы
+                //После создания таблицы просим пользователя ввести название таблицы снова
+                System.out.println("Введите название таблицы, куда сохранить результат: ");
+                String newTableName = scanner.next();
+                //Рекурсивно вызываем метод сохранения с новым названием таблицы
+                saveResultToDatabase(opName, opResult, newTableName);
+            }
         }
     }
 
-    // Метод для экспорта всех данных из MySQL в Excel
+    //Метод для экспорта всех данных из MySQL в Excel
     private static void exportToExcel(Connection con) {
         try {
             String excelFilePath = "results.xlsx";
@@ -191,6 +201,10 @@ public class StringManipulation {
                         row.createCell(i - 1).setCellValue(resultSet.getString(i));
                     }
                 }
+                //Автоматически устанавливаем ширину столбцов на основе содержимого
+                for (int i = 0; i < columnCount; i++) {
+                    sheet.autoSizeColumn(i);
+                }
                 try (FileOutputStream outputStream = new FileOutputStream(excelFilePath)) {
                     workbook.write(outputStream);
                 }
@@ -201,7 +215,7 @@ public class StringManipulation {
         }
     }
 
-    // Метод для отображения содержимого таблицы в базе данных MySQL
+    //Метод для отображения содержимого таблицы в базе данных MySQL
     private static void displayTableContents(Connection con, String tableName) {
         String sql = "SELECT * FROM " + tableName;
         try (Statement statement = con.createStatement();
@@ -226,7 +240,7 @@ public class StringManipulation {
         }
     }
 
-    // Метод для установления соединения с базой данных MySQL
+    //Метод для установления соединения с базой данных MySQL
     private static Connection getConnection(String url, String username, String password) throws SQLException {
         return DriverManager.getConnection(url, username, password);
     }
