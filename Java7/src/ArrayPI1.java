@@ -6,12 +6,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class ArrayPI1 {
 
     public static Scanner scanner = new Scanner(System.in);
     public static Connection con;
+    public static int[] array;
 
     public static void main(String[] args) {
         try {
@@ -50,7 +52,7 @@ public class ArrayPI1 {
                     inputAndSaveArrayToDatabase();
                     break;
                 case 4:
-                    sortArrayAndSaveToDatabase();
+                    sortArray();
                     break;
                 case 5:
                     exportResultsToExcel();
@@ -65,32 +67,40 @@ public class ArrayPI1 {
     }
 
     public static void inputAndSaveArrayToDatabase() {
-        int[] array = new int[35];
+        array = new int[35];
         System.out.println("Введите 35 элементов одномерного массива:");
         for (int i = 0; i < array.length; i++) {
             array[i] = scanner.nextInt();
         }
+        int[] unsortedArray = Arrays.copyOf(array, array.length); // Создаем копию неотсортированного массива
+        System.out.println("Введите имя таблицы для сохранения массива:");
+        String tableName = scanner.next();
         try {
-            saveArrayToDatabase(array);
+            bubbleSort(array); // Сортировка
+            saveArrayToDatabase(unsortedArray, array, tableName); // Передаем исходный и отсортированный массивы
             System.out.println("Массив сохранен в базе данных.");
         } catch (SQLException e) {
             System.out.println("Ошибка при сохранении массива в базе данных: " + e.getMessage());
         }
     }
 
-    public static void sortArrayAndSaveToDatabase() {
-        int[] array = new int[35];
-        System.out.println("Введите 35 элементов одномерного массива для сортировки:");
-        for (int i = 0; i < array.length; i++) {
-            array[i] = scanner.nextInt();
+    public static void saveArrayToDatabase(int[] unsortedArray, int[] sortedArray, String tableName) throws SQLException {
+        try (PreparedStatement statement = con.prepareStatement(
+                "INSERT INTO " + tableName + " (InputArray, SortedArray) VALUES (?, ?)")) {
+            statement.setString(1, arrayToString(unsortedArray)); // Сохраняем неотсортированный массив
+            statement.setString(2, arrayToString(sortedArray)); // Сохраняем отсортированный массив
+            statement.executeUpdate();
+        }
+    }
+
+
+    public static void sortArray() {
+        if (array == null) {
+            System.out.println("Массив не был введен. Пожалуйста, введите массив.");
+            return;
         }
         bubbleSort(array);
-        try {
-            saveArrayToDatabase(array);
-            System.out.println("Отсортированный массив сохранен в базе данных.");
-        } catch (SQLException e) {
-            System.out.println("Ошибка при сохранении отсортированного массива в базе данных: " + e.getMessage());
-        }
+        System.out.println("Массив отсортирован.");
     }
 
     public static void bubbleSort(int[] arr) {
@@ -147,15 +157,16 @@ public class ArrayPI1 {
         }
     }
 
-    public static void saveArrayToDatabase(int[] array) throws SQLException {
-        try (PreparedStatement statement = con.prepareStatement(
-                "INSERT INTO ArrayPI (Value) VALUES (?)")) {
-            for (int i = 0; i < array.length; i++) {
-                statement.setInt(1, array[i]);
-                statement.addBatch();
+
+    public static String arrayToString(int[] array) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            sb.append(array[i]);
+            if (i < array.length - 1) {
+                sb.append(",");
             }
-            statement.executeBatch();
         }
+        return sb.toString();
     }
 
     public static void displayTables(Connection con) throws SQLException {
@@ -175,7 +186,7 @@ public class ArrayPI1 {
         String tableName = scanner.next();
 
         try (Statement statement = con.createStatement()) {
-            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (Value INT)";
+            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (InputArray VARCHAR(255), SortedArray VARCHAR(255))";
             statement.executeUpdate(sql);
             System.out.println("Таблица " + tableName + " создана успешно.");
         } catch (SQLException e) {
