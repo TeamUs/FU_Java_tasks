@@ -201,7 +201,6 @@ public class StringManipulation {
                         row.createCell(i - 1).setCellValue(resultSet.getString(i));
                     }
                 }
-                //Автоматически устанавливаем ширину столбцов на основе содержимого
                 for (int i = 0; i < columnCount; i++) {
                     sheet.autoSizeColumn(i);
                 }
