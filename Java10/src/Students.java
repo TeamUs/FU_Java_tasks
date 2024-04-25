@@ -87,7 +87,7 @@ public class Students {
         String tableName = scanner.nextLine();
 
         try (Statement statement = con.createStatement()) {
-            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (ID INT AUTO_INCREMENT PRIMARY KEY, Direction VARCHAR(255), FullName VARCHAR(255), GroupName VARCHAR(255))";
+            String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (ID INT PRIMARY KEY, Direction VARCHAR(255), FullName VARCHAR(255), GroupName VARCHAR(255))";
             statement.executeUpdate(sql);
             System.out.println("Таблица " + tableName + " создана успешно.");
         } catch (SQLException e) {

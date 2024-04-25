@@ -1,9 +1,9 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.ArrayType;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
@@ -341,29 +341,33 @@ public class ArrayPI2 {
             try (Connection con = getConnection("jdbc:mysql://localhost/test", "root", "root");
                  Statement statement = con.createStatement()) {
 
-                String sql = "SELECT Matrix1, Matrix2, Multiplication, Addition, Subtraction, Power FROM " + tableName;
-                ResultSet resultSet = statement.executeQuery(sql);
-
-                Sheet[] sheets = new Sheet[6];
                 String[] sheetNames = {"Matrix1", "Matrix2", "Multiplication", "Addition", "Subtraction", "Power"};
 
                 for (int i = 0; i < 6; i++) {
-                    sheets[i] = workbook.createSheet(sheetNames[i]);
-                }
+                    Sheet sheet = workbook.createSheet(sheetNames[i]);
 
-                int rowCount = 0;
-                while (resultSet.next()) {
-                    String[] data = {resultSet.getString("Matrix1"), resultSet.getString("Matrix2"),
-                            resultSet.getString("Multiplication"), resultSet.getString("Addition"),
-                            resultSet.getString("Subtraction"), resultSet.getString("Power")};
+                    // Создаем строку с названием матрицы и объединяем ячейки по длине матрицы
+                    Row titleRow = sheet.createRow(0);
+                    Cell titleCell = titleRow.createCell(0);
+                    titleCell.setCellValue(sheetNames[i]);
+                    titleCell.getCellStyle().setFont(getBoldFont(workbook));
+                    CellStyle style = workbook.createCellStyle();
+                    style.setAlignment(CellStyle.ALIGN_CENTER); // Отцентрируем текст в ячейке
+                    titleCell.setCellStyle(style); // Применяем стиль к ячейке
+                    sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 2));
 
-                    for (int i = 0; i < 6; i++) {
-                        double[][] matrix = deserializeMatrix(data[i]);
-                        exportMatrixToSheet(matrix, sheets[i], rowCount);
+                    // Переходим к следующей строке
+                    int rowCount = 1;
+
+                    String sql = "SELECT " + sheetNames[i] + " FROM " + tableName;
+                    try (ResultSet resultSet = statement.executeQuery(sql)) {
+                        // Заполнение матрицы
+                        while (resultSet.next()) {
+                            double[][] matrix = deserializeMatrix(resultSet.getString(1));
+                            exportMatrixToSheet(matrix, sheet, rowCount);
+                            rowCount += matrix.length;
+                        }
                     }
-
-                    rowCount += data.length;
-
                 }
 
                 String excelFilePath = "results.xlsx";
@@ -380,6 +384,22 @@ public class ArrayPI2 {
         }
     }
 
+
+
+    public static Font getBoldFont(Workbook workbook) {
+        Font boldFont = workbook.createFont();
+        if (boldFont instanceof XSSFFont) {
+            XSSFFont xssfFont = (XSSFFont) boldFont;
+            xssfFont.setBold(true);
+        } else if (boldFont instanceof HSSFFont) {
+            HSSFFont hssfFont = (HSSFFont) boldFont;
+            hssfFont.setBoldweight(Font.BOLDWEIGHT_BOLD);
+        }
+        return boldFont;
+    }
+
+
+
     private static void exportMatrixToSheet(double[][] matrix, Sheet sheet, int startRow) {
         int rownum = startRow;
         for (double[] row : matrix) {
@@ -391,6 +411,7 @@ public class ArrayPI2 {
             }
         }
     }
+
 
     public static double[][] deserializeMatrix(String matrixString) {
         try {
